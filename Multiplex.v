@@ -1,63 +1,51 @@
-module time_multiplex_7seg
-	(
-		input clk,
-		inout [3:0] val0, val1, val2, val3,
-		input [1:0] sel,
-		input dp_in,
-		output reg [3:0] an, //register for 4 bit enable
-		output reg [6:0] sseg
-	);
-	
-	localparam N = 18 //16 bits for counter feedback and 2 bits for the selection input (GENDRIC VARIABLE***)
-	reg [N-1:0] regN;
-	reg [3:0] val_in;
-	reg dp;
-	
-	assign dp_in = 1'b0;
-	
-	//there is 3 blocks that require always including the multiplexor, the d flip flop, and the 2 to 4 decoder
-	//refresh rate or up counter or clock (feedback loop)
-	always@ (posedge clk)
-	begin
-		regN = regN + 1 
-	end
-	
-	//Multiplexor
-	//This b2'b11 : out = val3;lock gets executed whe val0 or val1 or val2 or val3 change in value
-	//Depending on the case of sel
-	always@*(val0, val1, val2, val3, clk)
-	begin
-		case(regN[N-1:N-2])
-		2'b00:
-		hex_to_sseg(val0,sseg)
-		
-		2'b01:
-		hex_to_sseg(val1,sseg)
-		
-		2'b10:
-		hex_to_sseg(val2,sseg)
-		
-		2'b11:
-		hex_to_sseg(val3,sseg)
+module disp_mux
+(
+	input wire clk, 
+	input [3:0] in0, in1, in2, in3,
+	output reg [3:0] an,
+	output reg [6:0] sseg,
+);
 
+	//constant dec
+	//refresh
+	localparam N = 18;
+	//signal declaration
+	//D-FlipFlop
+	reg [N-1:0] q_reg;
+	wire [N-1:0] q_next;
+
+	always @(posedge clk)
+	begin
+		if(posedge clk)
+			q_reg = 0;
+		else
+			q_reg =  q_next;
+	end
+
+	assign q_next = q_reg + 1;
+	
+	//2 MSB ofcounter to control 4-to-1 multiplexing
+	//
+	always@ * //this is just to display onto the seven segment using mux, recall that the anodes are active low
+	begin
+		case(q_reg[N-1:N-2])
+			2'b00: begin
+				an = 4'b1110 //same thing as selecting the first seven segment an[0] so if bits 17 and 16 are 00
+				sseg = in0;
+				end
+			2'b01: begin
+				an = 4'b1101 //same thing as selecting the second seven segment an[1] so if bits 17 and 16 are 01
+				sseg = in1;
+				end
+			2'b10: begin
+				an = 4'b1011 //same thing as selecting the third seven segment an[2] so if bits 17 and 16 are 10
+				sseg = in2;
+				end
+			2'b11: begin
+				an = 4'b0111 //same thing as selecting the second seven segment an[3] so if bits 17 and 16 are 11
+				sseg = in3;
+				end
 		endcase
-
-
-
-	end
-	
-	//Decoder
-	always@ *
-	begin
-		case(regN[N-3:N-4])
-		2'b00:
-		an[0] = 1'b0;
-		2'b01 
-		an[1] = 1'b0;
-		2'b10
-		an[2] = 1'b0;
-		2'b11
-		an[3] = 1'b0;
 	end
 endmodule
 
