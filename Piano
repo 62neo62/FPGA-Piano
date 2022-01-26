@@ -63,6 +63,4 @@ begin
 		speakeractive <= !speakeractive;
 	end
 end
-	
- // Describe the actual circuit for the assignment.
-endmodule
+	endmodule
