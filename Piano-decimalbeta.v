@@ -1,3 +1,5 @@
+//utilizing decimal representation for half period clock cycles
+
 timescale 1 ns / 1 ps
 // Declare the module and its ports. This is
 // using Verilog-2001 syntax.
